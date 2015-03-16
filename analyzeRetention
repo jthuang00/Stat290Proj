@@ -1,0 +1,106 @@
+analyzeRetention <- function(eventData, userData, triggerEvent, responseEvent, responseGap,
+                             analysisModel = c("linear", "probit", "logit"),
+                             selectionMechanism = c("ridge","lasso","stepwise", "validation"),
+                             tuningParams){
+  
+  analysisDataFrame -> calculateResponseMatrix(eventData, triggerEvent, responseEvent, responseGap)
+  
+  case: model linear
+}
+
+
+calculateResponseMatrix <- function(eventData, triggerEvent, responseEvent, responseGap) {
+  # Calculates matrix where each row is a user and responseIndicator pair
+  #
+  # Args: 
+  #   eventData: dataframe of timestamped events by userId
+  #   triggerEvent: string name of event that triggers inclusion in analysis
+  #   responsEvent: string name of event of concern that we want to measure
+  #   responseGap: maximum gap between triggerEvent and responseEvent
+  # 
+  # Returns:
+  #   Data frame with two named columns, userID and responseIndicator.
+  #     - userID appears in matrix if user performed triggerEvent
+  #     - responseIndicator is TRUE if user performed responseEvent within
+  #         responseGap of performing triggerEvent
+  
+  # error handling
+  if(!(triggerEvent %in% eventData$event)) {
+    stop('triggerEvent not in eventData')
+  }
+  if(!(responseEvent %in% eventData$event)) {
+    stop('responseEvent not in eventData')
+  }
+  
+  user <- unique(eventData$user)
+  
+  resultMatrix <- NULL
+  
+  for (i in length(user)){
+    timeTrigger <- getEventTimestamp(eventData, user[i], triggerEvent)
+    timeResponse <- getEventTimestamp(eventData, user[i], responseEvent)
+    responseIndicator <- NULL
+
+    if (!is.na(timeTrigger){
+      if (!is.na(timeResponse) & timeResponse < timeTrigger+responseGap & timeResponse > timeTrigger) {
+        responseIndicator = TRUE
+      }
+      else {
+        responseIndicator = FALSE
+      }
+      
+      newRow <- c(user[i], responseIndicator)
+      resultMatrix <- rbind(resultMatrix, newRow)
+    }
+  }
+  return(resultMatrix)
+}
+
+calculateMarginalFx <- function(regression) {
+  # Calculate elasticities/marginal effects
+  # 
+
+
+# Takes event data, a userID, and event name
+# Returns latest timestamp of that event
+
+getEventTimestamp(eventData, userId, event){
+  # gets the timestamp of an event by a given user
+  # 
+  # Args:
+  #   eventData: dataframe of timestamped events by userId
+  #   userId: userId whose timestamp should be returned
+  #   event: string name of event whose timestamp should be returned
+  #
+  # Returns:
+  #   latest timestamp of event by userId, NA if not found
+  
+  # error handling
+  if !(userId %in% eventData$user) {
+    stop('userId not in eventData')
+  }
+  
+  eventData <- eventData[order(-eventData$timestamp),]
+  
+  result <- NA
+  found <- FALSE
+  rowCounter <- 1
+  
+  while (!found & rowCounter <= nrow(eventData)) {
+    if (eventData$user[rowCounter] == userId & eventData$event[rowCounter] == event) {
+      found <- TRUE
+      result <- eventData$timestamp[rowCounter]
+    }
+  }
+  
+  return(result)
+}
+
+# Takes event data and a user ID
+# Returns whether they have the given event
+# Between timestampStart and timestampEnd
+
+hasEvent(eventData, userId){
+  
+  
+}
